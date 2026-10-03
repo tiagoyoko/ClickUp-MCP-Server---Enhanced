@@ -7,10 +7,10 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/@chykalophia/clickup-mcp-server"><img src="https://img.shields.io/npm/v/@chykalophia/clickup-mcp-server.svg" alt="Version"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen" alt="Node.js Version"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen" alt="Node.js Version"></a>
 </p>
 
-A comprehensive Model Context Protocol (MCP) server providing AI assistants with complete ClickUp integration. Features **177+ core tools**, **production-grade security**, and **full GitHub Flavored Markdown support**.
+A comprehensive Model Context Protocol (MCP) server providing AI assistants with complete ClickUp integration. Features **158 core tools**, **production-grade security**, and **full GitHub Flavored Markdown support**.
 
 ## 🚀 Quick Start
 
@@ -38,7 +38,35 @@ Add to your MCP client configuration:
 
 ## 🛠️ Features
 
-### 177+ Core Tools
+### Project stage field sync (MCP and CLI)
+
+The `clickup_sync_project_stage_field` MCP tool and the equivalent CLI inspect a
+folder-level dropdown named `Etapa`. They reuse an exact match, report drift
+without changing it, and default to a dry run. The canonical workflow contains
+13 ordered stages from `Backlog` through `Entregue` and `Cancelado`.
+
+```bash
+# Inspect only; machine-readable for agents
+clickup-project-stage-sync \
+  --folder 901711729053 \
+  --dry-run \
+  --json
+
+# Create only when missing. Both flags are deliberately required because
+# ClickUp does not document folder-level custom-field creation.
+clickup-project-stage-sync \
+  --folder 901711729053 \
+  --apply \
+  --confirm-create \
+  --json
+```
+
+Set `CLICKUP_API_TOKEN` in the environment, never in command arguments. The
+optional `CLICKUP_PROJECTS_FOLDER_ID` environment variable can replace
+`--folder`. Existing definitions are never updated or deleted by this command;
+option drift is returned as `manual_update_required` for correction in ClickUp.
+
+### 158 Core Tools
 - **Tasks**: Create, update, delete, bulk operations, merging
 - **Lists & Spaces**: Complete CRUD operations with safeguards
 - **Comments**: Rich markdown support with formatting

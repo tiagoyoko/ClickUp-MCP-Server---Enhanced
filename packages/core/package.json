@@ -1,13 +1,14 @@
 {
   "name": "@chykalophia/clickup-mcp-server",
   "version": "6.2.0",
-  "description": "An intelligent Model Context Protocol server for ClickUp API integration with 157 tools, AI-powered efficiency optimization, smart tool suggestions, and context-aware workflow recommendations",
+  "description": "An intelligent Model Context Protocol server for ClickUp API integration with 158 tools, AI-powered efficiency optimization, smart tool suggestions, and context-aware workflow recommendations",
   "main": "build/index-enhanced.js",
   "bin": {
     "clickup-mcp-server": "build/index-enhanced.js",
     "clickup-mcp-server-basic": "bin/clickup-mcp-server-basic.js",
     "clickup-mcp-server-enhanced": "bin/clickup-mcp-server-enhanced.js",
-    "clickup-mcp-server-efficiency": "bin/clickup-mcp-server-efficiency.js"
+    "clickup-mcp-server-efficiency": "bin/clickup-mcp-server-efficiency.js",
+    "clickup-project-stage-sync": "build/cli/project-stage-field-sync.js"
   },
   "scripts": {
     "build": "node scripts/esbuild-build.mjs",
@@ -24,6 +25,7 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
+    "clickup:project-stage:sync": "node build/cli/project-stage-field-sync.js",
     "security:audit": "npm audit --audit-level=moderate",
     "security:check": "npm run security:audit && npm run test:security",
     "validate": "npm run test:coverage && npm run security:check",

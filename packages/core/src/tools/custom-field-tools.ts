@@ -5,15 +5,19 @@ import { createClickUpClient } from '../clickup-client/index.js';
 import { createEnhancedCustomFieldsClient } from '../clickup-client/custom-fields-enhanced.js';
 import { mcpError } from '../utils/error-handling.js';
 import { idSchema } from '../schemas/common.js';
+import {
+  PROJECT_STAGE_OPTIONS,
+  syncFolderDropdownField,
+} from '../utils/folder-dropdown-field-sync.js';
 
 // Create clients
 const clickUpClient = createClickUpClient();
 const customFieldsClient = createEnhancedCustomFieldsClient(clickUpClient);
 
-// NOTE: The ClickUp public API does NOT support creating, updating, or deleting
-// custom field DEFINITIONS — fields must be created in the ClickUp UI. Only
-// listing field definitions and getting/setting/removing field VALUES is
-// supported, so no create/update/delete field tools are registered here.
+// ClickUp documents listing definitions and reading/writing values, but not
+// folder-level definition creation or definition updates. The stage-field sync
+// tool below treats creation as experimental, requires explicit confirmation,
+// and never tries to update or delete an existing definition.
 
 const VALUE_FORMAT_GUIDE =
   'Value format by field type: ' +
@@ -38,7 +42,7 @@ export function setupCustomFieldTools(server: McpServer): void {
 
   server.tool(
     'clickup_get_custom_fields',
-    'Get custom field definitions for a ClickUp list, folder, space, or team (workspace). List-level requests include fields inherited from parent levels; folder, space, and team requests return only fields created at that exact level. Note: the ClickUp API cannot create, update, or delete custom field definitions — fields must be created in the ClickUp UI.',
+    'Get custom field definitions for a ClickUp list, folder, space, or team (workspace). List-level requests include fields inherited from parent levels; folder, space, and team requests return fields available at that scope.',
     {
       container_type: z
         .enum(['list', 'folder', 'space', 'team', 'workspace'])
@@ -81,6 +85,65 @@ export function setupCustomFieldTools(server: McpServer): void {
         };
       } catch (error: unknown) {
         return mcpError('getting custom fields', error);
+      }
+    }
+  );
+
+  server.tool(
+    'clickup_sync_project_stage_field',
+    'Idempotently inspect or create a folder-level dropdown field for project stages. Defaults to the canonical "Etapa" field. Dry-run is enabled by default. Existing matching fields are reused; definition drift is reported for manual correction because ClickUp has no supported field-definition update endpoint. Creation uses an undocumented endpoint and requires dry_run=false plus confirm_create=true.',
+    {
+      folder_id: idSchema().describe(
+        'Folder that should own the field so its project lists inherit the definition'
+      ),
+      field_name: z.string().trim().min(1).optional().default('Etapa'),
+      options: z
+        .array(
+          z.object({
+            name: z.string().trim().min(1),
+            color: z.string().trim().min(1).optional(),
+          })
+        )
+        .min(1)
+        .optional()
+        .describe(
+          'Desired ordered dropdown options. Omit to use the canonical 13-stage project workflow.'
+        ),
+      required: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe('Whether a newly created field should be required'),
+      dry_run: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe('Inspect and return the plan without creating anything; defaults to true'),
+      confirm_create: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe(
+          'Required together with dry_run=false before calling the undocumented creation endpoint'
+        ),
+    },
+    async ({ folder_id, field_name, options, required, dry_run, confirm_create }) => {
+      try {
+        const result = await syncFolderDropdownField(customFieldsClient, {
+          folderId: folder_id,
+          fieldName: field_name,
+          options: options ?? PROJECT_STAGE_OPTIONS,
+          required,
+          dryRun: dry_run,
+          confirmCreate: confirm_create,
+        });
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result) }],
+          ...(!result.ok ? { isError: true as const } : {}),
+        };
+      } catch (error: unknown) {
+        return mcpError('syncing project stage field', error);
       }
     }
   );

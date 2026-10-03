@@ -2,7 +2,7 @@
  * Toolset gating for the ClickUp MCP server.
  *
  * Every registered tool's JSON Schema is published to the client on connect —
- * all 157 of them, ~157KB, re-sent on every reconnect. Clients that bridge a
+ * all 158 of them, ~158KB, re-sent on every reconnect. Clients that bridge a
  * local server to a remote session (Claude Desktop's remote-tools bridge) pay
  * that cost on each connection rotation, and the definitions occupy context
  * before the first prompt.
@@ -31,7 +31,7 @@ export const TOOLSETS = {
   docs: { count: 9, description: 'Docs, doc pages, and doc search' },
   spaces: { count: 9, description: 'Spaces and space tags' },
   dependencies: { count: 8, description: 'Task dependencies, links, and dependency graphs' },
-  'custom-fields': { count: 7, description: 'Custom field definitions and values' },
+  'custom-fields': { count: 8, description: 'Custom field definitions and values' },
   webhooks: { count: 7, description: 'Webhook management, processing, and signature validation' },
   checklists: { count: 6, description: 'Checklists and checklist items' },
   workspace: { count: 6, description: 'Workspaces, members, seats, plan, and authorized user' },
