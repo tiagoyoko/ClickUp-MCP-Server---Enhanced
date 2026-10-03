@@ -1,7 +1,7 @@
 {
   "name": "clickup-mcp-monorepo",
   "version": "6.1.0",
-  "description": "ClickUp MCP Server monorepo - Core server with 157 tools and Intelligence server with AI-powered project management features",
+  "description": "ClickUp MCP Server monorepo - Core server with 158 tools and Intelligence server with AI-powered project management features",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -17,6 +17,7 @@
     "lint": "npm run lint --workspaces",
     "lint:fix": "npm run lint:fix --workspaces",
     "format": "npm run format --workspaces",
+    "clickup:project-stage:sync": "node packages/core/build/cli/project-stage-field-sync.js",
     "clean": "npm run clean --workspaces && rm -rf node_modules",
     "validate": "npm run test:coverage && npm run lint",
     "publish:all": "npm run publish --workspaces",

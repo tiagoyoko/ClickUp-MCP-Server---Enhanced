@@ -16,7 +16,7 @@
  * `additionalProperties: false` for every tool. Making the runtime strict does
  * not add a restriction — it makes the runtime obey the schema it advertises.
  *
- * ## How it is fixed here, once, for all ~157 tools
+ * ## How it is fixed here, once, for all ~158 tools
  *
  * `tool()` cannot take a full `ZodObject` — it mis-routes anything that is not
  * a raw shape into its annotations branch and throws. `registerTool()` can, and

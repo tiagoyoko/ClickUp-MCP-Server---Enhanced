@@ -7,9 +7,10 @@ import axios, { AxiosInstance } from 'axios';
 // ========================================
 
 // Real ClickUp custom field type strings as returned by the API.
-// NOTE: The ClickUp public API has NO endpoints to create, update, or delete
-// custom field DEFINITIONS — fields must be created in the ClickUp UI.
-// The API can only list field definitions and get/set/remove field VALUES.
+// NOTE: The ClickUp public API documents listing field definitions and
+// getting/setting/removing field VALUES, but not definition creation, updates,
+// or deletion. Folder-level definition creation below is explicitly marked as
+// experimental and must be confirmed and reconciled by callers.
 export type CustomFieldType =
   | 'url'
   | 'drop_down'
@@ -370,6 +371,15 @@ export interface CustomFieldsResponse {
   fields: CustomField[];
 }
 
+export interface CreateFolderDropdownFieldParams {
+  name: string;
+  required: boolean;
+  options: Array<{
+    name: string;
+    color?: string;
+  }>;
+}
+
 // ========================================
 // ENHANCED CUSTOM FIELDS CLIENT
 // ========================================
@@ -410,7 +420,7 @@ export class EnhancedCustomFieldsClient {
    */
   async getFolderCustomFields(folderId: string): Promise<CustomField[]> {
     try {
-      const url = `https://api.clickup.com/api/v2/folder/${folderId}/field`;
+      const url = `/folder/${folderId}/field`;
       const response = await this.http.get(url);
       return response.data.fields || [];
     } catch (error) {
@@ -454,6 +464,43 @@ export class EnhancedCustomFieldsClient {
         error instanceof Error ? error.message : error
       );
       throw this.handleError(error, `Failed to get custom fields for workspace ${teamId}`);
+    }
+  }
+
+  /**
+   * Create a dropdown custom-field definition at folder scope.
+   *
+   * ClickUp does not document this write endpoint. Callers must gate it behind
+   * an explicit confirmation and reconcile with getFolderCustomFields before
+   * retrying an ambiguous failure.
+   */
+  async createFolderDropdownFieldExperimental(
+    folderId: string,
+    params: CreateFolderDropdownFieldParams
+  ): Promise<CustomField> {
+    try {
+      const url = `/folder/${folderId}/field`;
+      const response = await this.http.post(url, {
+        name: params.name,
+        type: 'drop_down',
+        required: params.required,
+        type_config: {
+          sorting: 'manual',
+          options: params.options.map((option, orderindex) => ({
+            name: option.name,
+            ...(option.color ? { color: option.color } : {}),
+            orderindex,
+          })),
+        },
+      });
+
+      return response.data.field ?? response.data;
+    } catch (error) {
+      console.error(
+        'Error creating folder custom field through experimental endpoint:',
+        error instanceof Error ? error.message : error
+      );
+      throw this.handleError(error, `Failed to create custom field on folder ${folderId}`);
     }
   }
 
